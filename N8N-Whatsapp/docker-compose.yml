@@ -1,0 +1,27 @@
+services:
+  n8n:
+    # Mismo build que docker.n8n.io/n8nio/n8n, pero desde Docker Hub:
+    # el registry propio de n8n no siempre resuelve por DNS.
+    image: n8nio/n8n:latest
+    container_name: hovy-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      # Zona horaria de los nodos Schedule y de las fechas que muestra la UI.
+      - GENERIC_TIMEZONE=America/Argentina/Cordoba
+      - TZ=America/Argentina/Cordoba
+      # Sin esto n8n avisa en cada arranque que los task runners van a ser obligatorios.
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+    volumes:
+      # Workflows, credenciales e historial de ejecuciones. Sin esto se pierde todo al recrear.
+      - n8n_data:/home/node/.n8n
+    extra_hosts:
+      # Permite que los nodos HTTP Request lleguen al mock que corre en la maquina
+      # host via http://host.docker.internal:3000 (para el contenedor, "localhost" es el
+      # propio contenedor). En Docker Desktop ya viene resuelto, pero explicitarlo no molesta.
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  n8n_data:

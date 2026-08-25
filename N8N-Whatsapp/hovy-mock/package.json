@@ -1,0 +1,14 @@
+{
+  "name": "hovy-mock",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend mock en memoria para el spike del chatbot de Hovy en n8n",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

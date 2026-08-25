@@ -1,0 +1,19 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno (la API key real de Hovy nunca va al repo)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Datos locales de n8n (viven en el volumen de Docker, no acá)
+.n8n/
+
+# Sistema operativo
+Thumbs.db
+desktop.ini
+.DS_Store

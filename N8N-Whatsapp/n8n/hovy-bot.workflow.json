@@ -1,0 +1,621 @@
+{
+  "name": "Hovy Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hovy-bot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 420],
+      "webhookId": "b2000000-0000-4000-8000-000000000001"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:3000/api/bot/cliente",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "hovy-dev-key"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "telefono",
+              "value": "={{ $json.body.telefono }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000002",
+      "name": "Buscar Cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 420],
+      "onError": "continueErrorOutput",
+      "notes": "Salida roja = 404: el telefono no es de un cliente registrado."
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c0000000-0000-4000-8000-000000000001",
+                    "leftValue": "={{ $('Webhook').first().json.body.boton_id }}",
+                    "rightValue": "aprobar_turno_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "aprobar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c0000000-0000-4000-8000-000000000002",
+                    "leftValue": "={{ $('Webhook').first().json.body.boton_id }}",
+                    "rightValue": "rechazar_turno_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "rechazar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c0000000-0000-4000-8000-000000000003",
+                    "leftValue": "={{ $('Webhook').first().json.body.boton_id }}",
+                    "rightValue": "encuesta_puntaje_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "encuesta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c0000000-0000-4000-8000-000000000004",
+                    "leftValue": "={{ $('Webhook').first().json.body.texto }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "texto"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "a1000000-0000-4000-8000-000000000003",
+      "name": "Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [500, 400],
+      "notes": "La salida extra recoge todo lo que no matchea ninguna regla."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:3000/api/bot/turnos/{{ $('Webhook').first().json.body.boton_id.split('_').pop() }}/confirmar",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "hovy-dev-key"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "clienteId",
+              "value": "={{ $('Buscar Cliente').first().json.id_cliente }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000004",
+      "name": "Confirmar Turno",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 0],
+      "onError": "continueErrorOutput",
+      "notes": "Salida roja = 403 turno ajeno o 409 estado invalido."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:3000/api/bot/turnos/{{ $('Webhook').first().json.body.boton_id.split('_').pop() }}/rechazar",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "hovy-dev-key"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "clienteId",
+              "value": "={{ $('Buscar Cliente').first().json.id_cliente }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000005",
+      "name": "Rechazar Turno",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 220],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/api/bot/encuestas",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "hovy-dev-key"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "clienteId",
+              "value": "={{ $('Buscar Cliente').first().json.id_cliente }}"
+            },
+            {
+              "name": "puntaje",
+              "value": "={{ Number($('Webhook').first().json.body.boton_id.split('_').pop()) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000006",
+      "name": "Guardar Encuesta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 440],
+      "onError": "continueErrorOutput",
+      "notes": "El boton solo trae el puntaje; el backend resuelve a que turno corresponde."
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:3000/api/bot/turnos/proximo",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "hovy-dev-key"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "clienteId",
+              "value": "={{ $('Buscar Cliente').first().json.id_cliente }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000007",
+      "name": "Proximo Turno",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 680],
+      "onError": "continueErrorOutput",
+      "notes": "Salida roja = 404 sin turnos. NO es respuesta vacia: lleva a un mensaje amable."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d0000000-0000-4000-8000-000000000001",
+              "name": "respuesta",
+              "value": "=✅ Listo {{ $('Buscar Cliente').first().json.nombre }}, confirmamos el mantenimiento del {{ $json.fecha_legible }} por la {{ $json.franja_horaria }} en {{ $json.direccion_referencia }}, {{ $json.barrio }}.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000008",
+      "name": "Set Confirmado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1040, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d0000000-0000-4000-8000-000000000002",
+              "name": "respuesta",
+              "value": "=Entendido {{ $('Buscar Cliente').first().json.nombre }}, cancelamos el turno del {{ $json.fecha_legible }} en {{ $json.direccion_referencia }}. Nos comunicamos para reprogramar.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000009",
+      "name": "Set Rechazado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1040, 220]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d0000000-0000-4000-8000-000000000003",
+              "name": "respuesta",
+              "value": "=¡Gracias por responder, {{ $('Buscar Cliente').first().json.nombre }}! Registramos tu puntaje de {{ $json.puntaje }}/5 para el servicio del {{ $json.fecha_legible }}.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000010",
+      "name": "Set Encuesta",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1040, 440]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d0000000-0000-4000-8000-000000000004",
+              "name": "respuesta",
+              "value": "=Hola {{ $('Buscar Cliente').first().json.nombre }}. Tu próximo mantenimiento es el {{ $json.fecha_legible }} por la {{ $json.franja_horaria }} en {{ $json.direccion_referencia }}, {{ $json.barrio }}. Estado: {{ $json.estado }}.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000011",
+      "name": "Set Proximo Turno",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1040, 660]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d0000000-0000-4000-8000-000000000005",
+              "name": "respuesta",
+              "value": "=Hola {{ $('Buscar Cliente').first().json.nombre }}. No tenés mantenimientos programados por el momento. Cuando agendemos uno te avisamos por acá.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000012",
+      "name": "Set Sin Turnos",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1040, 880]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ respuesta: $json.respuesta }) }}",
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000013",
+      "name": "Responder Texto",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1320, 440]
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "a1000000-0000-4000-8000-000000000014",
+      "name": "Responder Vacio",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1320, 1080],
+      "notes": "200 sin body: el bot calla y el mensaje queda para que lo conteste una persona."
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Buscar Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Cliente": {
+      "main": [
+        [
+          {
+            "node": "Router",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder Vacio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router": {
+      "main": [
+        [
+          {
+            "node": "Confirmar Turno",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rechazar Turno",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Guardar Encuesta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Proximo Turno",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder Vacio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmar Turno": {
+      "main": [
+        [
+          {
+            "node": "Set Confirmado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder Vacio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rechazar Turno": {
+      "main": [
+        [
+          {
+            "node": "Set Rechazado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder Vacio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar Encuesta": {
+      "main": [
+        [
+          {
+            "node": "Set Encuesta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder Vacio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proximo Turno": {
+      "main": [
+        [
+          {
+            "node": "Set Proximo Turno",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Sin Turnos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Confirmado": {
+      "main": [
+        [
+          {
+            "node": "Responder Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Rechazado": {
+      "main": [
+        [
+          {
+            "node": "Responder Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Encuesta": {
+      "main": [
+        [
+          {
+            "node": "Responder Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Proximo Turno": {
+      "main": [
+        [
+          {
+            "node": "Responder Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Sin Turnos": {
+      "main": [
+        [
+          {
+            "node": "Responder Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
