@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "url": "http://host.docker.internal:3000/api/bot/cliente",
+        "url": "http://hovy-api:3000/api/bot/cliente",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -55,13 +55,13 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "loose",
+                  "typeValidation": "strict",
                   "version": 2
                 },
                 "conditions": [
                   {
                     "id": "c0000000-0000-4000-8000-000000000001",
-                    "leftValue": "={{ $('Webhook').first().json.body.boton_id }}",
+                    "leftValue": "={{ $('Webhook').first().json.body.boton_id || '' }}",
                     "rightValue": "aprobar_turno_",
                     "operator": {
                       "type": "string",
@@ -79,13 +79,13 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "loose",
+                  "typeValidation": "strict",
                   "version": 2
                 },
                 "conditions": [
                   {
                     "id": "c0000000-0000-4000-8000-000000000002",
-                    "leftValue": "={{ $('Webhook').first().json.body.boton_id }}",
+                    "leftValue": "={{ $('Webhook').first().json.body.boton_id || '' }}",
                     "rightValue": "rechazar_turno_",
                     "operator": {
                       "type": "string",
@@ -103,13 +103,13 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "loose",
+                  "typeValidation": "strict",
                   "version": 2
                 },
                 "conditions": [
                   {
                     "id": "c0000000-0000-4000-8000-000000000003",
-                    "leftValue": "={{ $('Webhook').first().json.body.boton_id }}",
+                    "leftValue": "={{ $('Webhook').first().json.body.boton_id || '' }}",
                     "rightValue": "encuesta_puntaje_",
                     "operator": {
                       "type": "string",
@@ -127,13 +127,13 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "loose",
+                  "typeValidation": "strict",
                   "version": 2
                 },
                 "conditions": [
                   {
                     "id": "c0000000-0000-4000-8000-000000000004",
-                    "leftValue": "={{ $('Webhook').first().json.body.texto }}",
+                    "leftValue": "={{ $('Webhook').first().json.body.texto || '' }}",
                     "rightValue": "",
                     "operator": {
                       "type": "string",
@@ -163,7 +163,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://host.docker.internal:3000/api/bot/turnos/{{ $('Webhook').first().json.body.boton_id.split('_').pop() }}/confirmar",
+        "url": "=http://hovy-api:3000/api/bot/turnos/{{ $('Webhook').first().json.body.boton_id.split('_').pop() }}/confirmar",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -195,7 +195,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://host.docker.internal:3000/api/bot/turnos/{{ $('Webhook').first().json.body.boton_id.split('_').pop() }}/rechazar",
+        "url": "=http://hovy-api:3000/api/bot/turnos/{{ $('Webhook').first().json.body.boton_id.split('_').pop() }}/rechazar",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -226,7 +226,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:3000/api/bot/encuestas",
+        "url": "http://hovy-api:3000/api/bot/encuestas",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -261,7 +261,7 @@
     },
     {
       "parameters": {
-        "url": "http://host.docker.internal:3000/api/bot/turnos/proximo",
+        "url": "http://hovy-api:3000/api/bot/turnos/proximo",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

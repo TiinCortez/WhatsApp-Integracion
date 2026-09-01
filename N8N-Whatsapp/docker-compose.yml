@@ -1,3 +1,8 @@
+# Compose crea automaticamente una red para el proyecto y mete adentro a todos
+# los servicios. Se ven entre si por el nombre de servicio (n8n, hovy-api), que
+# funciona como un hostname. Publicar puertos al host es una decision aparte:
+# eso es lo que hace "ports", y solo n8n lo necesita.
+
 services:
   n8n:
     # Mismo build que docker.n8n.io/n8nio/n8n, pero desde Docker Hub:
@@ -6,11 +11,17 @@ services:
     container_name: hovy-n8n
     restart: unless-stopped
     ports:
+      # Unica puerta al exterior de todo el stack.
       - "5678:5678"
     environment:
       # Zona horaria de los nodos Schedule y de las fechas que muestra la UI.
       - GENERIC_TIMEZONE=America/Argentina/Cordoba
       - TZ=America/Argentina/Cordoba
+      # URL publica del tunel. Sin esto n8n muestra localhost en los nodos webhook,
+      # y esa URL no le sirve a Meta. Actualizar si ngrok da otro dominio.
+      - WEBHOOK_URL=https://bleak-cornfield-reptile.ngrok-free.dev/
+      - N8N_HOST=bleak-cornfield-reptile.ngrok-free.dev
+      - N8N_PROTOCOL=https
       # Sin esto n8n avisa en cada arranque que los task runners van a ser obligatorios.
       - N8N_RUNNERS_ENABLED=true
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
@@ -18,10 +29,19 @@ services:
       # Workflows, credenciales e historial de ejecuciones. Sin esto se pierde todo al recrear.
       - n8n_data:/home/node/.n8n
     extra_hosts:
-      # Permite que los nodos HTTP Request lleguen al mock que corre en la maquina
-      # host via http://host.docker.internal:3000 (para el contenedor, "localhost" es el
-      # propio contenedor). En Docker Desktop ya viene resuelto, pero explicitarlo no molesta.
+      # Solo para la etapa de spike, mientras el mock corre suelto en Windows.
+      # Una vez que el backend esta en este compose, deja de hacer falta.
       - "host.docker.internal:host-gateway"
+
+  # El backend del bot. Fijate que NO tiene "ports": existe solo dentro de la red
+  # del proyecto. n8n lo alcanza como http://hovy-api:3000, pero desde Windows o
+  # desde internet no hay forma de llegarle.
+  hovy-api:
+    build: ./hovy-mock
+    container_name: hovy-api
+    restart: unless-stopped
+    environment:
+      - HOVY_API_KEY=hovy-dev-key
 
 volumes:
   n8n_data:
